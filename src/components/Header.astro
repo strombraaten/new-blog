@@ -2,11 +2,13 @@
 import Container from "@components/Container.astro";
 import Link from "@components/Link.astro";
 import { SITE } from "@consts";
+import Search from "astro-pagefind/components/Search";
 ---
 
 <header transition:persist>
   <Container>
-    <div class="flex flex-wrap justify-between gap-y-2">
+    <!-- First row: Site title and navigation links -->
+    <div class="flex flex-wrap justify-between gap-y-2 mb-4">
       <Link href="/" underline={false}>
         <div class="font-semibold">
           {SITE.TITLE}&nbsp;🔬
@@ -18,29 +20,298 @@ import { SITE } from "@consts";
           {`/`}
         </span>
         <Link href="/projects">projects</Link>
-        <span>
-          {`/`}
-        </span>
-        <button
-          id="magnifying-glass"
-          aria-label="Search"
-          class="flex items-center rounded-sm border border-black/15 bg-neutral-100 px-2 py-1 text-xs transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:bg-neutral-900 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"
-        >
-          <svg
-            height="16"
-            stroke-linejoin="round"
-            viewBox="0 0 16 16"
-            width="16"
-            style="color: currentcolor;"
-            ><path
-              fill-rule="evenodd"
-              clip-rule="evenodd"
-              d="M3.5 7C3.5 5.067 5.067 3.5 7 3.5C8.933 3.5 10.5 5.067 10.5 7C10.5 7.88461 10.1718 8.69256 9.63058 9.30876L9.30876 9.63058C8.69256 10.1718 7.88461 10.5 7 10.5C5.067 10.5 3.5 8.933 3.5 7ZM9.96544 11.0261C9.13578 11.6382 8.11014 12 7 12C4.23858 12 2 9.76142 2 7C2 4.23858 4.23858 2 7 2C9.76142 2 12 4.23858 12 7C12 8.11014 11.6382 9.13578 11.0261 9.96544L14.0303 12.9697L14.5607 13.5L13.5 14.5607L12.9697 14.0303L9.96544 11.0261Z"
-              fill="currentColor"></path></svg
-          >
-          &nbsp;Search
-        </button>
       </nav>
+    </div>
+    
+    <!-- Second row: Search bar with inline results -->
+    <div class="w-full mb-4 relative" id="search-bar-container">
+      <!-- Single search field that changes state -->
+      <div class="relative">
+        
+        <Search
+          id="search"
+          className="pagefind-ui"
+          uiOptions={{
+            showImages: false,
+            excerptLength: 15,
+            resetStyles: false,
+          }}
+        />
+        
+        <!-- Keyboard shortcut indicator -->
+        <div id="search-shortcut" class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+          <kbd class="px-1.5 py-0.5 text-xs rounded border border-gray-300 bg-gray-100 dark:border-gray-600 dark:bg-gray-800">⌘ K</kbd>
+        </div>
+      </div>
+      
+      <!-- Search results container that appears inline -->
+      <div id="search-results-container" class="hidden absolute left-0 right-0 top-full z-40 mt-1 rounded-sm border border-black/15 bg-neutral-100 p-2 px-4 py-3 shadow-lg dark:border-white/20 dark:bg-neutral-900 transition-all duration-200 ease-in-out">
+        <div class="mr-2 pb-1 pt-4 text-right text-xs dark:prose-invert">
+          Press <span class="prose text-xs dark:prose-invert"><kbd class="">Esc</kbd></span> to close
+        </div>
+      </div>
     </div>
   </Container>
 </header>
+
+<style is:global>
+  /* Search styling to match content width */
+  :root {
+    --pagefind-ui-scale: 0.75;
+    --pagefind-ui-border-width: 1px;
+    --pagefind-ui-border-radius: 3px;
+    --pagefind-ui-font: "Geist", sans-serif;
+    --pagefind-ui-primary: #3d3d3d;
+    --pagefind-ui-text: #3d3d3d;
+    --pagefind-ui-background: #ffffff;
+    --pagefind-ui-border: #d0d0d0;
+    --pagefind-ui-tag: #f5f5f5;
+  }
+  
+  /* Make the search input span the full width */
+  .pagefind-ui__form {
+    width: 100%;
+    margin: 0;
+  }
+  
+  .pagefind-ui__search-input {
+    width: 100%;
+    padding-left: 2.5rem !important; /* Make room for the left search icon */
+    padding-right: 4.5rem !important; /* Make room for the keyboard shortcut */
+    background-color: var(--pagefind-ui-background) !important;
+    border: 1px solid var(--pagefind-ui-border) !important;
+    border-radius: 0.125rem !important;
+    font-size: 0.875rem !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    transition: all 0.1s ease;
+  }
+
+  .dark {
+    --pagefind-ui-primary: #d4d4d4;
+    --pagefind-ui-text: #d4d4d4;
+    --pagefind-ui-background: #171717;
+    --pagefind-ui-border: #404040;
+  }
+
+  /* Search input styling */
+  #search input {
+    font-weight: normal;
+    color: var(--pagefind-ui-text);
+  }
+  
+  #search input:focus {
+    border-color: var(--pagefind-ui-primary) !important;
+    outline: none;
+    box-shadow: 0 0 0 1px var(--pagefind-ui-primary);
+  }
+
+  /* Hide the default search button */
+  .pagefind-ui__search-clear {
+    display: none !important;
+  }
+
+  /* Style search icons */
+  #search-icon-left {
+    color: #6b7280;
+    transition: color 0.1s ease;
+  }
+
+  .dark #search-icon-left {
+    color: #9ca3af;
+  }
+
+  #search input:focus ~ #search-icon-left {
+    color: var(--pagefind-ui-primary);
+  }
+  
+  /* Style keyboard shortcut */
+  #search-shortcut kbd {
+    font-family: "Geist", sans-serif;
+    font-size: 0.7rem;
+    line-height: 1;
+  }
+
+  /* Search results styling */
+  #search p {
+    font-weight: normal;
+  }
+
+  #search .pagefind-ui__result-title {
+    font-weight: 600;
+  }
+
+  #search .pagefind-ui__message {
+    padding: 0;
+    padding-bottom: 0.75rem;
+  }
+  
+  /* Search results container styling */
+  #search-results-container {
+    max-height: 70vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  /* Improve search results appearance */
+  .pagefind-ui__results {
+    margin-top: 0.5rem;
+  }
+  
+  .pagefind-ui__result {
+    padding: 0.75rem 0;
+  }
+  
+  .pagefind-ui__result-link:hover {
+    text-decoration: underline;
+  }
+  
+  .pagefind-ui__result-excerpt {
+    margin-top: 0.25rem;
+  }
+  
+  /* Accessibility */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 640px) {
+    #search-results-container {
+      max-height: 60vh;
+      padding: 1rem;
+    }
+    
+    .pagefind-ui__search-input {
+      font-size: 16px !important; /* Prevent zoom on mobile */
+    }
+    
+    .pagefind-ui__result-excerpt {
+      min-width: auto; /* Override the default min-width for mobile */
+    }
+  }
+</style>
+
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Search functionality
+    const searchResultsContainer = document.getElementById("search-results-container");
+    const searchBarContainer = document.getElementById("search-bar-container");
+    const searchDiv = document.getElementById("search");
+    const searchInput = searchDiv.querySelector("input");
+    
+    // Initialize search state
+    let isSearchOpen = false;
+    
+    function openSearch() {
+      if (isSearchOpen) return;
+      
+      // Show search results container
+      searchResultsContainer.classList.remove("hidden");
+      
+      // Add active state to search bar
+      searchBarContainer.classList.add("search-active");
+      
+      // Focus the input
+      searchInput.focus();
+      
+      isSearchOpen = true;
+      
+      // Announce for screen readers
+      const srAnnounce = document.createElement('div');
+      srAnnounce.setAttribute('role', 'status');
+      srAnnounce.classList.add('sr-only');
+      srAnnounce.textContent = 'Search results are now visible. Type to search the site.';
+      document.body.appendChild(srAnnounce);
+      setTimeout(() => document.body.removeChild(srAnnounce), 1000);
+    }
+    
+    function closeSearch() {
+      if (!isSearchOpen) return;
+      
+      // Clear input and results
+      searchInput.value = "";
+      searchResultsContainer.classList.add("hidden");
+      
+      // Remove active state
+      searchBarContainer.classList.remove("search-active");
+      
+      // Clear search results to reset state
+      const resultsArea = searchDiv.querySelector(".pagefind-ui__results-area");
+      if (resultsArea) {
+        resultsArea.innerHTML = "";
+      }
+      
+      isSearchOpen = false;
+      
+      // Announce for screen readers
+      const srAnnounce = document.createElement('div');
+      srAnnounce.setAttribute('role', 'status');
+      srAnnounce.classList.add('sr-only');
+      srAnnounce.textContent = 'Search closed.';
+      document.body.appendChild(srAnnounce);
+      setTimeout(() => document.body.removeChild(srAnnounce), 1000);
+    }
+    
+    // Open search when the search input is focused
+    searchInput.addEventListener("focus", () => {
+      openSearch();
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener("keydown", (e) => {
+      // Forward slash or Cmd/Ctrl+K to focus search
+      if (e.key === "/" || ((e.metaKey || e.ctrlKey) && e.key === "k")) {
+        e.preventDefault();
+        searchInput.focus();
+        openSearch();
+      }
+      // Escape to close search
+      else if (e.key === "Escape" && isSearchOpen) {
+        e.preventDefault();
+        closeSearch();
+        searchInput.blur();
+      }
+    });
+    
+    // Close search when clicked outside
+    document.addEventListener("click", (event) => {
+      if (!isSearchOpen) return;
+      
+      const isClickInsideSearch = searchResultsContainer?.contains(event.target) || 
+                                  searchDiv?.contains(event.target);
+      
+      if (!isClickInsideSearch) {
+        closeSearch();
+      }
+    });
+    
+    // Close search when search result link is clicked
+    document.addEventListener("click", (event) => {
+      if (event.target.classList.contains("pagefind-ui__result-link")) {
+        closeSearch();
+      }
+    });
+    
+    // Prevent form submission
+    const searchForm = document.querySelector(".pagefind-ui__form");
+    searchForm?.addEventListener("submit", (event) => {
+      event.preventDefault();
+    });
+    
+    // Initialize search input placeholder
+    if (searchInput) {
+      searchInput.setAttribute('placeholder', 'Search...');
+      // Add some left padding to avoid text overlapping with the search icon
+      searchInput.style.textIndent = '0';
+    }
+  });
+</script>
